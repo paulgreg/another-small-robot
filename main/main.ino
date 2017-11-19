@@ -3,6 +3,8 @@
 #define SAFE_DISTANCE 12
 #define TURNING_FOR 8
 
+#define SIWTCH_PIN 13
+
 #define trigger 12
 #define echo 11
 
@@ -19,6 +21,8 @@ void setup() {
   pinMode(motorPins[2], OUTPUT);
   pinMode(motorPins[3], OUTPUT);
 
+  pinMode(SIWTCH_PIN, INPUT);
+
   pinMode(trigger, OUTPUT);
   digitalWrite(trigger, LOW);
   pinMode(echo, INPUT);
@@ -26,22 +30,32 @@ void setup() {
 }
 
 void loop() {
-  if (turnCounter > 0) {
-    if (DEBUG) Serial.println("turning");
-    turnRight();
-    turnCounter--;
+  if (digitalRead(SIWTCH_PIN) == LOW) {
+    stop();
+    delay(1000);
   } else {
-    long distanceInCm = getDistanceInCm();
-    if (DEBUG) Serial.println(distanceInCm);
-    
-    if (distanceInCm > SAFE_DISTANCE) {
-      if (DEBUG) Serial.println("forward");
-      goForward();
+    if (turnCounter > 0) {
+      if (DEBUG) Serial.println("turning");
+      turnRight();
+      turnCounter--;
     } else {
-      turnCounter = TURNING_FOR;
+      long distanceInCm = getDistanceInCm();
+      if (DEBUG) Serial.println(distanceInCm);
+      
+      if (distanceInCm > SAFE_DISTANCE) {
+        if (DEBUG) Serial.println("forward");
+        goForward();
+      } else {
+        turnCounter = TURNING_FOR;
+      }
     }
+    delay(250);
   }
-  delay(250);
+}
+
+void stop() {
+  setMotor(0, 0, false);
+  setMotor(1, 0, false);
 }
 
 void turnRight() {
