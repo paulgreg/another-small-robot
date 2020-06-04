@@ -1,10 +1,15 @@
 int motorEnablePin[] = {9, 10};
 int motorPins[] = {6, 8, 5, 7};
 
+#define SAFE_DISTANCE_IN_CM 20
+
 #define FORWARD 'F'
 #define RIGHT 'R'
 #define LEFT 'L'
 #define STOP 'S'
+
+#define trigger 12
+#define echo 11
 
 char steps[] = {
   STOP,
@@ -25,6 +30,10 @@ void setup() {
   pinMode(motorPins[1], OUTPUT);
   pinMode(motorPins[2], OUTPUT);
   pinMode(motorPins[3], OUTPUT);
+
+  pinMode(trigger, OUTPUT);
+  digitalWrite(trigger, LOW);
+  pinMode(echo, INPUT);
 }
 
 void setMotor(int idx, int speed, boolean reverse) {
@@ -65,34 +74,51 @@ void end() {
   }
 }
 
+long getDistanceInCm() {
+  digitalWrite(trigger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigger, LOW);
+  long echoRead = pulseIn(echo, HIGH);
+  return echoRead / 58;
+}
+
+boolean checkIfSafeDistance (long minDistanceInCm) {
+  long distanceInCm = getDistanceInCm();
+  Serial.print("Distance forward: ");
+  Serial.println(distanceInCm);
+  return distanceInCm > minDistanceInCm;
+}
+
 void loop() {
   if (stepIdx >= sizeof(steps)) end();
 
-  char nextStep = steps[stepIdx]; 
-  Serial.print("Next step: ");
-  Serial.println(nextStep);
-  
-  switch (nextStep) {
-    case FORWARD:
-      goForward();
-      delay(3400);
-      break;
-    case RIGHT:
-      turnRight();
-      delay(3000);
-      break;
-    case LEFT:
-      turnRight();
-      delay(3000);
-      break;
-    case STOP:
-    default:
-      stop();
-      delay(1000);
-      break;
+  if (!checkIfSafeDistance(SAFE_DISTANCE_IN_CM)) {
+    stop();
+    delay(5000);
+  } else {
+    char nextStep = steps[stepIdx]; 
+    Serial.print("Next step: ");
+    Serial.println(nextStep);
+    
+    switch (nextStep) {
+      case FORWARD:
+        goForward();
+        delay(3500);
+        break;
+      case RIGHT:
+        turnRight();
+        delay(3100);
+        break;
+      case LEFT:
+        turnLeft();
+        delay(3100);
+        break;
+      case STOP:
+      default:
+        stop();
+        delay(1000);
+        break;
+    }
+    stepIdx++;
   }
-  stepIdx++;
-  Serial.print("stepIdx: ");
-  Serial.println(stepIdx);
-
 }
