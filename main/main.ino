@@ -1,7 +1,7 @@
-#define DEBUG false
+#define DEBUG true
 
 #define SAFE_DISTANCE 12
-#define TURNING_FOR 8
+#define TURNING_FOR 12
 
 #define trigger 12
 #define echo 11
@@ -59,9 +59,14 @@ void goForward() {
   setMotor(1, 255, false);
 }
 
+void goBackward() {
+  setMotor(0, 255, true);
+  setMotor(1, 255, true);
+}
+
 void setMotor(int idx, int speed, boolean reverse) {
   analogWrite(motorEnablePin[idx], speed);
-  digitalWrite(motorPins[idx], ! reverse);
+  digitalWrite(motorPins[idx], !reverse);
   digitalWrite(motorPins[idx + 2], reverse);
 }
 
